@@ -26,10 +26,21 @@ export default (function () {
         }
         let cardResult = cardNumber[0] + cardNumber[1] + str + cardNumber[cardNumber.length-4] + cardNumber[cardNumber.length-3] + cardNumber[cardNumber.length-2] + cardNumber[cardNumber.length-1]
 
+        let usersName = users[record.user_id - 1].first_name + " " + users[record.user_id - 1].last_name;
+        let male = "Ms.";
+        if (users[record.user_id - 1].gender === "Male") {
+            male = "Mr.";
+        }
+        let usersNameResult = `
+        <td class="user_data">
+            <a href="#">${male} ${usersName}</a>
+        </td>
+        `;
+
         return `
         <tr id="order_${record.id}">
             <td>${record.transaction_id}</td>
-            <td class="user_data">${record.user_id}</td>
+            ${usersNameResult}
             <td>${time}</td>
             <td>$${record.total}</td>
             <td>${cardResult}</td>
