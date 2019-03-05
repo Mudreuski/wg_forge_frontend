@@ -2,6 +2,11 @@
 import orders from '../data/orders.json';
 import companies from '../data/companies.json';
 import users from '../data/users.json';
+import style from '../dist/style.css';
+
+console.log(orders);
+console.log(users);
+console.log(companies);
 
 export default (function () {
     const rows = orders.map((record) => {
@@ -31,16 +36,46 @@ export default (function () {
         if (users[record.user_id - 1].gender === "Male") {
             male = "Mr.";
         }
-        let usersNameResult = `
+
+        let timestampBirthday = new Date(users[record.user_id - 1].birthday * 1000);
+        let yearBirthday = timestampBirthday.getFullYear();
+        let monthBirthday = timestampBirthday.getMonth() + 1;
+        let dateBirthday = timestampBirthday.getDate();
+        let usersBirthday = dateBirthday + '/' + monthBirthday + '/' + yearBirthday;
+
+        let idCompany = users[record.user_id - 1].company_id - 1;
+        let companyTitle = "";
+        let companyLink = "";
+        let companyLinkTarget = "_blank";
+        let companyIndustry = "";
+        if (idCompany >= 0) {
+            companyTitle = companies[idCompany].title;
+            companyLink = companies[idCompany].url;
+            companyIndustry = companies[idCompany].industry;
+        } else {
+            companyTitle = "no information available";
+            companyLink = "#";
+            companyLinkTarget = "_self";
+            companyIndustry = "no information available";
+        }
+
+        let usersInfo = `
         <td class="user_data">
-            <a href="#">${male} ${usersName}</a>
+            <a href="#" onclick="event.preventDefault()">${male} ${usersName}</a>
+
+            <div class="user-details">
+                <p>Birthday: ${usersBirthday}</p>
+                <p><img src="${users[record.user_id - 1].avatar}" width="100px"></p>
+                <p>Company: <a href="${companyLink}" target="${companyLinkTarget}">${companyTitle}</a></p>
+                <p>Industry: ${companyIndustry}</p>
+            </div>
         </td>
         `;
-
+        
         return `
         <tr id="order_${record.id}">
             <td>${record.transaction_id}</td>
-            ${usersNameResult}
+            ${usersInfo}
             <td>${time}</td>
             <td>$${record.total}</td>
             <td>${cardResult}</td>
@@ -70,4 +105,11 @@ export default (function () {
 
     const mailEl = document.getElementById("app");
     mailEl.innerHTML = table;
+   
 }());
+
+document.querySelector('tbody').addEventListener('click', ({ target }) => {
+    if (target.tagName === 'A') {
+        target.parentNode.querySelector('div.user-details').classList.toggle('active');
+    } 
+})
