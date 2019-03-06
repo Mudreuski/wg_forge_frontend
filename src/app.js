@@ -81,12 +81,14 @@ export default (function () {
             <td>${cardResult}</td>
             <td>${record.card_type}</td>
             <td>${record.order_country} (${record.order_ip})</td>
+            <td class="hide">${usersName}</td>
+            <td class="hide">${record.created_at}</td>
         </tr>
         `
     }).join('')
 
     const table = `
-    <table>
+    <table class="table_sort">
         <thead>
             <tr>
                 <th>Transaction ID</th>
@@ -96,6 +98,8 @@ export default (function () {
                 <th>Card Number</th>
                 <th>Card Type</th>
                 <th>Location</th>
+                <th class="hide">User Info Hide</th>
+                <th class="hide">Order Date Hide</th>
             </tr>
         </thead>
         <tbody>
@@ -112,4 +116,32 @@ document.querySelector('tbody').addEventListener('click', ({ target }) => {
     if (target.tagName === 'A') {
         target.parentNode.querySelector('div.user-details').classList.toggle('active');
     } 
-})
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const getSort = ({ target }) => {
+        const order = (target.dataset.order = -(target.dataset.order || -1));
+        let index = [...target.parentNode.cells].indexOf(target);
+        if (index === 4) {
+            return;
+        } else if (index === 1) {
+            index = 7;
+        } else if (index === 2) {
+            index = 8;
+        }
+
+        const collator = new Intl.Collator(['en', 'ru'], { numeric: true });
+        const comparator = (index, order) => (a, b) => order * collator.compare(
+            a.children[index].innerHTML,
+            b.children[index].innerHTML
+        );
+
+        for(const tBody of target.closest('table').tBodies)
+            tBody.append(...[...tBody.rows].sort(comparator(index, order)));
+
+        for(const cell of target.parentNode.cells)
+            cell.classList.toggle('sorted', cell === target);
+    };
+    
+    document.querySelectorAll('.table_sort thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
+});
