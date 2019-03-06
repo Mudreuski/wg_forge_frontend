@@ -4,9 +4,12 @@ import companies from '../data/companies.json';
 import users from '../data/users.json';
 import style from '../dist/style.css';
 
-console.log(orders);
-console.log(users);
-console.log(companies);
+let ordersTotal = 0;
+const medianValue = [];
+let checkFemale = 0;
+let femaleCount = 0;
+let checkMale = 0;
+let maleCount = 0;
 
 export default (function () {
     const rows = orders.map((record) => {
@@ -35,6 +38,11 @@ export default (function () {
         let male = "Ms.";
         if (users[record.user_id - 1].gender === "Male") {
             male = "Mr.";
+            checkMale += +record.total;
+            maleCount +=1;
+        } else {
+            checkFemale += +record.total;
+            femaleCount +=1;
         }
 
         let timestampBirthday = new Date(users[record.user_id - 1].birthday * 1000);
@@ -71,7 +79,10 @@ export default (function () {
             </div>
         </td>
         `;
-        
+
+        ordersTotal += +record.total;
+        medianValue.push(+record.total);
+
         return `
         <tr id="order_${record.id}">
             <td>${record.transaction_id}</td>
@@ -105,6 +116,32 @@ export default (function () {
         <tbody>
             ${rows}
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2">Orders Count</td>
+                <td colspan="5" id="ordersCount">11</td>
+            </tr>
+            <tr>
+                <td colspan="2">Orders Total</td>
+                <td colspan="5" id="ordersTotal">$ 6722.72</td>
+            </tr>
+            <tr>
+                <td colspan="2">Median Value</td>
+                <td colspan="5" id="medianValue">$ 593.72</td>
+            </tr>
+            <tr>
+                <td colspan="2">Average Check</td>
+                <td colspan="5" id="averageCheck">$ 611.16</td>
+            </tr>
+            <tr>
+                <td colspan="2">Average Check (Female)</td>
+                <td colspan="5" id="averageCheckFemale">$ 395.18</td>
+            </tr>
+            <tr>
+                <td colspan="2">Average Check (Male)</td>
+                <td colspan="5" id="averageCheckMale">$ 692.15</td>
+            </tr>
+        </tfoot>
     </table> `;
 
     const mailEl = document.getElementById("app");
@@ -145,3 +182,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.querySelectorAll('.table_sort thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
 });
+
+
+function totalInformation(){
+    let tr = document.getElementsByTagName('table').item(0).getElementsByTagName('tr').length;
+
+    let medianResult = 0;
+
+    function compareNumeric(a, b) {
+        if (a > b) return 1;
+        if (a < b) return -1;
+    }
+    medianValue.sort(compareNumeric);
+
+    if (medianValue.length % 2 === 0) {
+        medianResult = (medianValue[medianValue.length / 2] + medianValue[medianValue.length / 2 - 1]) / 2;
+    } else {
+        medianResult = medianValue[Math.floor(medianValue.length / 2)];
+    }
+
+    document.getElementById('ordersCount').innerHTML = tr - 7;
+    document.getElementById('ordersTotal').innerHTML = "$ " + ordersTotal.toFixed(2);
+    document.getElementById('medianValue').innerHTML = "$ " + medianResult;
+    document.getElementById('averageCheck').innerHTML = "$ " + (ordersTotal / medianValue.length).toFixed(2);
+    document.getElementById('averageCheckFemale').innerHTML = "$ " + (checkFemale / femaleCount).toFixed(2);
+    document.getElementById('averageCheckMale').innerHTML = "$ " + (checkMale / maleCount).toFixed(2);
+}
+window.onload=totalInformation; 
