@@ -165,6 +165,7 @@ document.querySelector('tbody').addEventListener('click', ({ target }) => {
 document.addEventListener('DOMContentLoaded', () => {
     const getSort = ({ target }) => {
         if (target.id === "search") return;
+        if (target.classList[0] === "noTarget") return;
 
         const order = (target.dataset.order = -(target.dataset.order || -1));
         let index = [...target.parentNode.cells].indexOf(target);
@@ -228,21 +229,43 @@ function tableSearch() {
     var flag = false;
     let searchCount = 0;
     let medianResult = 0;
-
-    function compareNumeric(a, b) {
-        if (a > b) return 1;
-        if (a < b) return -1;
-    }
-    medianValue.sort(compareNumeric);
-
-    if (medianValue.length % 2 === 0) {
-        medianResult = (medianValue[medianValue.length / 2] + medianValue[medianValue.length / 2 - 1]) / 2;
-    } else {
-        medianResult = medianValue[Math.floor(medianValue.length / 2)];
-    }
+    let orderAmount = 0;
+    let totalAfterSearch = 0;
+    let medianAfterSearch = [];
+    let femaleCountAfterSearch = 0;
+    let maleCountAfterSearch = 0;
+    let checkFemaleAfterSearch = 0;
+    let checkMaleAfterSearch = 0;
 
     for (var i = 0; i < table.rows.length; i++) {
         flag = false;
+
+        if (table.rows[i].style.display != "none") {
+            orderAmount = +table.rows[i].cells[3].textContent.slice(1, );
+            totalAfterSearch += orderAmount;
+             
+            medianAfterSearch.push(+table.rows[i].cells[3].textContent.slice(1, ));
+            function compareNumeric(a, b) {
+                if (a > b) return 1;
+                if (a < b) return -1;
+            }
+            medianAfterSearch.sort(compareNumeric);
+            
+            if (medianAfterSearch.length % 2 === 0) {
+                medianResult = (medianAfterSearch[medianAfterSearch.length / 2] + medianAfterSearch[medianAfterSearch.length / 2 - 1]) / 2;
+            } else {
+                medianResult = medianAfterSearch[Math.floor(medianAfterSearch.length / 2)];
+            }
+            console.log(typeof table.rows[i].cells[1].childNodes[1].textContent);
+            if (table.rows[i].cells[1].childNodes[1].textContent.indexOf("Mr.") >= 0) {
+                checkMaleAfterSearch += orderAmount;
+                maleCountAfterSearch += 1;
+            } else {
+                checkFemaleAfterSearch += orderAmount;
+                femaleCountAfterSearch += 1;
+            }
+        }
+
         for (var j = table.rows[i].cells.length - 1; j >= 0; j--) {
             flag = regPhrase.test(table.rows[i].cells[j].innerHTML);
             
@@ -258,17 +281,27 @@ function tableSearch() {
     }
     
     if (searchCount > 0) {
-        document.getElementById('ordersCount').innerHTML = searchCount;
         document.querySelector('#notFound').classList.remove('activeFound');
         document.querySelector('#notFound').classList.add('hiden');
-        document.getElementById('ordersTotal').innerHTML = "$ " + ordersTotal.toFixed(2);
+
+        document.getElementById('ordersCount').innerHTML = searchCount;
+        document.getElementById('ordersTotal').innerHTML = "$ " + totalAfterSearch.toFixed(2);
         document.getElementById('medianValue').innerHTML = "$ " + medianResult;
-        document.getElementById('averageCheck').innerHTML = "$ " + (ordersTotal / medianValue.length).toFixed(2);
-        document.getElementById('averageCheckFemale').innerHTML = "$ " + (checkFemale / femaleCount).toFixed(2);
-        document.getElementById('averageCheckMale').innerHTML = "$ " + (checkMale / maleCount).toFixed(2);
+        document.getElementById('averageCheck').innerHTML = "$ " + (totalAfterSearch / medianAfterSearch.length).toFixed(2);
+        if (femaleCountAfterSearch > 0) {
+            document.getElementById('averageCheckFemale').innerHTML = "$ " + (checkFemaleAfterSearch / femaleCountAfterSearch).toFixed(2);
+        } else {
+            document.getElementById('averageCheckFemale').innerHTML = "n/a";
+        }
+        if (maleCountAfterSearch > 0) {
+            document.getElementById('averageCheckMale').innerHTML = "$ " + (checkMaleAfterSearch / maleCountAfterSearch).toFixed(2);
+        } else {
+            document.getElementById('averageCheckMale').innerHTML = "n/a";
+        } 
     } else {
         document.querySelector('#notFound').classList.remove('hiden');
         document.querySelector('#notFound').classList.add('activeFound');
+
         document.getElementById('ordersCount').innerHTML = "n/a";
         document.getElementById('ordersTotal').innerHTML = "n/a";
         document.getElementById('medianValue').innerHTML = "n/a";
