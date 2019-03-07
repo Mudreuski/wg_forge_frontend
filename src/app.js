@@ -88,7 +88,7 @@ export default (function () {
             <td>${record.transaction_id}</td>
             ${usersInfo}
             <td>${time}</td>
-            <td>$${record.total}</td>
+            <td class="cost">$${record.total}</td>
             <td>${cardResult}</td>
             <td>${record.card_type}</td>
             <td>${record.order_country} (${record.order_ip})</td>
@@ -102,6 +102,10 @@ export default (function () {
     <table class="table_sort">
         <thead>
             <tr>
+                <th colspan="2" class="noTarget">Search:</th>
+                <th colspan="5" class="noTarget"><input type="text" id="search"></th>
+            </tr>
+            <tr>
                 <th>Transaction ID</th>
                 <th>User Info</th>
                 <th>Order Date</th>
@@ -112,8 +116,11 @@ export default (function () {
                 <th class="hide">User Info Hide</th>
                 <th class="hide">Order Date Hide</th>
             </tr>
+            <tr class="hiden" id="notFound" colspan="7">
+                <td colspan="7">Nothing found</td>
+            </tr>
         </thead>
-        <tbody>
+        <tbody id="info-table">
             ${rows}
         </tbody>
         <tfoot>
@@ -157,6 +164,8 @@ document.querySelector('tbody').addEventListener('click', ({ target }) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const getSort = ({ target }) => {
+        if (target.id === "search") return;
+
         const order = (target.dataset.order = -(target.dataset.order || -1));
         let index = [...target.parentNode.cells].indexOf(target);
         if (index === 4) {
@@ -179,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for(const cell of target.parentNode.cells)
             cell.classList.toggle('sorted', cell === target);
     };
-    
+
     document.querySelectorAll('.table_sort thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
 });
 
@@ -201,7 +210,7 @@ function totalInformation(){
         medianResult = medianValue[Math.floor(medianValue.length / 2)];
     }
 
-    document.getElementById('ordersCount').innerHTML = tr - 7;
+    document.getElementById('ordersCount').innerHTML = tr - 9;
     document.getElementById('ordersTotal').innerHTML = "$ " + ordersTotal.toFixed(2);
     document.getElementById('medianValue').innerHTML = "$ " + medianResult;
     document.getElementById('averageCheck').innerHTML = "$ " + (ordersTotal / medianValue.length).toFixed(2);
@@ -209,3 +218,62 @@ function totalInformation(){
     document.getElementById('averageCheckMale').innerHTML = "$ " + (checkMale / maleCount).toFixed(2);
 }
 window.onload=totalInformation; 
+
+document.querySelector('#search').addEventListener('keyup', tableSearch);
+
+function tableSearch() {
+    var phrase = document.getElementById('search');
+    var table = document.getElementById('info-table');
+    var regPhrase = new RegExp(phrase.value, 'i');
+    var flag = false;
+    let searchCount = 0;
+    let medianResult = 0;
+
+    function compareNumeric(a, b) {
+        if (a > b) return 1;
+        if (a < b) return -1;
+    }
+    medianValue.sort(compareNumeric);
+
+    if (medianValue.length % 2 === 0) {
+        medianResult = (medianValue[medianValue.length / 2] + medianValue[medianValue.length / 2 - 1]) / 2;
+    } else {
+        medianResult = medianValue[Math.floor(medianValue.length / 2)];
+    }
+
+    for (var i = 0; i < table.rows.length; i++) {
+        flag = false;
+        for (var j = table.rows[i].cells.length - 1; j >= 0; j--) {
+            flag = regPhrase.test(table.rows[i].cells[j].innerHTML);
+            
+            if (flag) break;
+        }
+        if (flag) {
+            searchCount +=1;
+            table.rows[i].style.display = "";
+
+        } else {
+            table.rows[i].style.display = "none";
+        } 
+    }
+    
+    if (searchCount > 0) {
+        document.getElementById('ordersCount').innerHTML = searchCount;
+        document.querySelector('#notFound').classList.remove('activeFound');
+        document.querySelector('#notFound').classList.add('hiden');
+        document.getElementById('ordersTotal').innerHTML = "$ " + ordersTotal.toFixed(2);
+        document.getElementById('medianValue').innerHTML = "$ " + medianResult;
+        document.getElementById('averageCheck').innerHTML = "$ " + (ordersTotal / medianValue.length).toFixed(2);
+        document.getElementById('averageCheckFemale').innerHTML = "$ " + (checkFemale / femaleCount).toFixed(2);
+        document.getElementById('averageCheckMale').innerHTML = "$ " + (checkMale / maleCount).toFixed(2);
+    } else {
+        document.querySelector('#notFound').classList.remove('hiden');
+        document.querySelector('#notFound').classList.add('activeFound');
+        document.getElementById('ordersCount').innerHTML = "n/a";
+        document.getElementById('ordersTotal').innerHTML = "n/a";
+        document.getElementById('medianValue').innerHTML = "n/a";
+        document.getElementById('averageCheck').innerHTML = "n/a";
+        document.getElementById('averageCheckFemale').innerHTML = "n/a";
+        document.getElementById('averageCheckMale').innerHTML = "n/a";
+    }
+}
